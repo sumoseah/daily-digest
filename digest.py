@@ -395,6 +395,10 @@ def main():
     print("  Summarising with LLM (single call)...")
     summaries = summarise_all(raw)
 
+    # Debug: show summary lengths
+    for k, v in summaries.items():
+        print(f"    [{k}] summary: {len(v)} chars — {repr(v[:80])}")
+
     def get(key: str, fallback: str) -> str:
         text = summaries.get(key, "").strip()
         return md_to_html(text) if text else f"<p>{fallback}</p>"
