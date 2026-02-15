@@ -234,70 +234,29 @@ def fetch_all_raw() -> dict:
 
 
 def summarise_all(raw: dict) -> dict:
-    """Make ONE LLM call to summarise all sections. Returns dict of section_key -> summary text."""
+    """Make ONE LLM call per section but sequentially with delays to avoid rate limits.
+    Falls back gracefully on error."""
 
     today = today_str()
+    results = {}
 
-    prompt = f"""Today is {today}. You are writing a personal morning digest email.
-Summarise each section below in plain English using bullet points. Be concise and specific.
+    tasks = [
+        ("simon",       f"Summarise the 3-4 most interesting AI/tech posts from Simon Willison's blog today. For each include title and URL. Use bullet points.\n\n{raw['simon'] or 'No content.'}"),
+        ("tldr",        f"Extract the 4-5 most important AI/tech stories from this TLDR newsletter. One bullet point per story, one sentence each.\n\n{(raw['tldr'] or 'No email found.')[:3000]}"),
+        ("techcrunch",  f"Pick the 4-5 most notable startup funding or venture capital news items. Include company name, amount, and URL. Use bullet points.\n\n{raw['techcrunch'] or 'No content.'}"),
+        ("producthunt", f"Pick the top 5 most interesting new products. One bullet point each: product name, what it does, URL.\n\n{raw['producthunt'] or 'No content.'}"),
+        ("lenny",       f"Summarise the key ideas and takeaways from this Lenny's Newsletter edition in 4-5 bullet points.\n\n{(raw['lenny'] or 'No email found.')[:3000]}"),
+        ("luma",        f"Today is {today}. Pick the 4-5 most relevant AI or tech meetups in SF happening in the next 7 days. Include name, date, and URL. Use bullet points.\n\n{raw['luma'] or 'No events found.'}"),
+        ("funcheap",    f"Today is {today}. Pick the 3 most fun and interesting cheap or free SF events happening in the next 7 days. Include name, date, and URL. Use bullet points.\n\n{raw['funcheap'] or 'No events found.'}"),
+    ]
 
-For each section, output EXACTLY this format:
-===SECTION: section_name===
-<bullet points here>
+    import time
+    for key, user_prompt in tasks:
+        print(f"    Summarising {key}...")
+        results[key] = llm_summarise(SYSTEM_SUMMARISER, user_prompt, max_tokens=350)
+        time.sleep(2)  # 2s gap between calls to respect rate limits
 
-Sections to summarise:
-
-===INPUT: simon===
-Summarise the 3-4 most interesting posts from Simon Willison's AI/tech blog. Include the URL for each.
-{raw['simon'] or 'No content available.'}
-
-===INPUT: tldr===
-Extract the 4-5 most important AI/tech stories. One sentence per story.
-{raw['tldr'][:3000] if raw['tldr'] else 'No TLDR email found in inbox.'}
-
-===INPUT: techcrunch===
-Pick the 4-5 most notable startup funding/venture news items. Include company names and dollar amounts where mentioned. Include URLs.
-{raw['techcrunch'] or 'No content available.'}
-
-===INPUT: producthunt===
-Pick the top 5 most interesting products. One line each: name, what it does, URL.
-{raw['producthunt'] or 'No content available.'}
-
-===INPUT: lenny===
-Summarise the key ideas and takeaways in 4-5 bullet points.
-{raw['lenny'][:3000] if raw['lenny'] else 'No Lenny newsletter found in inbox.'}
-
-===INPUT: luma===
-Pick the 4-5 most relevant AI or tech meetups in SF happening in the next 7 days. Include date and URL.
-{raw['luma'] or 'No Luma events found.'}
-
-===INPUT: funcheap===
-Pick the 3 most fun and interesting cheap/free SF events happening in the next 7 days. Include date and URL.
-{raw['funcheap'] or 'No events found.'}
-
-Now write the summaries. Use the exact ===SECTION: name=== format for each."""
-
-    result = llm_summarise(SYSTEM_SUMMARISER, prompt, max_tokens=2000)
-
-    # Parse the response into per-section dicts
-    sections = {}
-    current_key = None
-    current_lines = []
-
-    for line in result.split("\n"):
-        m = re.match(r"===SECTION:\s*(\w+)===", line.strip())
-        if m:
-            if current_key:
-                sections[current_key] = "\n".join(current_lines).strip()
-            current_key = m.group(1)
-            current_lines = []
-        elif current_key:
-            current_lines.append(line)
-
-    if current_key:
-        sections[current_key] = "\n".join(current_lines).strip()
-
-    return sections
+    return results
 
 
 # ---------------------------------------------------------------------------
