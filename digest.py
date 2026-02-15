@@ -23,8 +23,8 @@ GMAIL_ADDRESS      = os.environ["GMAIL_ADDRESS"]      # your full gmail address
 GMAIL_APP_PASS     = os.environ["GMAIL_APP_PASS"]     # 16-char app password
 DIGEST_TO          = os.environ.get("DIGEST_TO", GMAIL_ADDRESS)  # who to send to
 
-# Free model on OpenRouter — strong and fast
-OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
+# Free model on OpenRouter (no payment required)
+OPENROUTER_MODEL = "google/gemma-3-4b-it:free"
 OPENROUTER_URL   = "https://openrouter.ai/api/v1/chat/completions"
 
 
@@ -192,97 +192,112 @@ SYSTEM_SUMMARISER = (
 )
 
 
-def section_simon_willison() -> str:
+def fetch_all_raw() -> dict:
+    """Fetch all raw content from every source. Returns a dict of section_key -> raw text."""
+    raw = {}
+
+    # Simon Willison
     items = fetch_rss("https://simonwillison.net/atom/everything/", limit=8)
-    if not items:
-        return "<p>No posts found.</p>"
-    raw = "\n".join(f"- {it['title']}: {it['link']}\n  {BeautifulSoup(it['summary'], 'html.parser').get_text()[:300]}" for it in items)
-    summary = llm_summarise(
-        SYSTEM_SUMMARISER,
-        f"Summarise the most interesting AI/tech posts from Simon Willison's blog today. Pick the 3-4 most notable. Include the URL for each.\n\n{raw}",
-        max_tokens=400,
-    )
-    return md_to_html(summary)
+    raw["simon"] = "\n".join(
+        f"- {it['title']}: {it['link']}\n  {BeautifulSoup(it['summary'], 'html.parser').get_text()[:200]}"
+        for it in items
+    ) if items else ""
 
+    # TLDR newsletter
+    raw["tldr"] = fetch_latest_email(subject_keyword="TLDR", sender_keyword="dan@tldrnewsletter.com")
 
-def section_tldr() -> str:
-    body = fetch_latest_email(subject_keyword="TLDR", sender_keyword="dan@tldrnewsletter.com")
-    if not body:
-        return "<p>TLDR email not found in inbox.</p>"
-    summary = llm_summarise(
-        SYSTEM_SUMMARISER,
-        f"Extract and summarise the 4-5 most important AI/tech stories from this TLDR newsletter. One sentence per story.\n\n{body}",
-        max_tokens=400,
-    )
-    return md_to_html(summary)
+    # TechCrunch
+    tc_items = fetch_rss("https://techcrunch.com/tag/venture/feed/", limit=10)
+    if not tc_items:
+        tc_items = fetch_rss("https://techcrunch.com/feed/", limit=15)
+    raw["techcrunch"] = "\n".join(f"- {it['title']}: {it['link']}" for it in tc_items)
 
+    # Product Hunt
+    ph_items = fetch_rss("https://www.producthunt.com/feed", limit=20)
+    raw["producthunt"] = "\n".join(f"- {it['title']}: {it['link']}" for it in ph_items)
 
-def section_techcrunch() -> str:
-    items = fetch_rss("https://techcrunch.com/tag/venture/feed/", limit=10)
-    if not items:
-        # fallback to main feed
-        items = fetch_rss("https://techcrunch.com/feed/", limit=15)
-    raw = "\n".join(f"- {it['title']}: {it['link']}" for it in items)
-    summary = llm_summarise(
-        SYSTEM_SUMMARISER,
-        f"Pick the 4-5 most notable startup funding or venture news items from today's TechCrunch. Include dollar amounts and company names where mentioned. Include the URL.\n\n{raw}",
-        max_tokens=350,
-    )
-    return md_to_html(summary)
+    # Lenny's Newsletter
+    raw["lenny"] = fetch_latest_email(subject_keyword="Lenny", sender_keyword="lenny@lennysnewsletter.com")
 
-
-def section_product_hunt() -> str:
-    items = fetch_rss("https://www.producthunt.com/feed", limit=20)
-    if not items:
-        return "<p>Product Hunt feed unavailable.</p>"
-    raw = "\n".join(f"- {it['title']}: {it['link']}" for it in items[:20])
-    summary = llm_summarise(
-        SYSTEM_SUMMARISER,
-        f"Pick the top 5 most interesting products from this Product Hunt feed. One line each: name, what it does, URL.\n\n{raw}",
-        max_tokens=300,
-    )
-    return md_to_html(summary)
-
-
-def section_lenny() -> str:
-    body = fetch_latest_email(subject_keyword="Lenny", sender_keyword="lenny@lennysnewsletter.com")
-    if not body:
-        return "<p>Lenny's Newsletter email not found in inbox.</p>"
-    summary = llm_summarise(
-        SYSTEM_SUMMARISER,
-        f"Summarise the key ideas and takeaways from this Lenny's Newsletter edition in 4-5 bullet points.\n\n{body}",
-        max_tokens=400,
-    )
-    return md_to_html(summary)
-
-
-def section_luma() -> str:
-    events = fetch_luma_sf(limit=10)
-    if not events:
-        return "<p>No Luma events found.</p>"
-    raw = "\n".join(
+    # Luma SF events
+    luma_events = fetch_luma_sf(limit=10)
+    raw["luma"] = "\n".join(
         f"- {ev['name']} | {ev['date'][:10] if ev['date'] else 'TBD'} | {ev['url']}"
-        for ev in events
-    )
-    summary = llm_summarise(
-        SYSTEM_SUMMARISER,
-        f"Today is {today_str()}. From this list of SF events on Luma, pick the 4-5 most relevant AI or tech meetups happening in the next 7 days. Include date and URL.\n\n{raw}",
-        max_tokens=350,
-    )
-    return md_to_html(summary)
+        for ev in luma_events
+    ) if luma_events else ""
+
+    # Funcheap
+    cheap_items = fetch_rss("https://feeds.feedburner.com/funcheapsf_recent_added_events/", limit=20)
+    raw["funcheap"] = "\n".join(f"- {it['title']}: {it['link']}" for it in cheap_items)
+
+    return raw
 
 
-def section_funcheap() -> str:
-    items = fetch_rss("https://feeds.feedburner.com/funcheapsf_recent_added_events/", limit=20)
-    if not items:
-        return "<p>Funcheap feed unavailable.</p>"
-    raw = "\n".join(f"- {it['title']}: {it['link']}" for it in items)
-    summary = llm_summarise(
-        SYSTEM_SUMMARISER,
-        f"Today is {today_str()}. From these SF cheap/free events, pick the 3 most fun and interesting ones happening in the next 7 days. Include date and URL.\n\n{raw}",
-        max_tokens=300,
-    )
-    return md_to_html(summary)
+def summarise_all(raw: dict) -> dict:
+    """Make ONE LLM call to summarise all sections. Returns dict of section_key -> summary text."""
+
+    today = today_str()
+
+    prompt = f"""Today is {today}. You are writing a personal morning digest email.
+Summarise each section below in plain English using bullet points. Be concise and specific.
+
+For each section, output EXACTLY this format:
+===SECTION: section_name===
+<bullet points here>
+
+Sections to summarise:
+
+===INPUT: simon===
+Summarise the 3-4 most interesting posts from Simon Willison's AI/tech blog. Include the URL for each.
+{raw['simon'] or 'No content available.'}
+
+===INPUT: tldr===
+Extract the 4-5 most important AI/tech stories. One sentence per story.
+{raw['tldr'][:3000] if raw['tldr'] else 'No TLDR email found in inbox.'}
+
+===INPUT: techcrunch===
+Pick the 4-5 most notable startup funding/venture news items. Include company names and dollar amounts where mentioned. Include URLs.
+{raw['techcrunch'] or 'No content available.'}
+
+===INPUT: producthunt===
+Pick the top 5 most interesting products. One line each: name, what it does, URL.
+{raw['producthunt'] or 'No content available.'}
+
+===INPUT: lenny===
+Summarise the key ideas and takeaways in 4-5 bullet points.
+{raw['lenny'][:3000] if raw['lenny'] else 'No Lenny newsletter found in inbox.'}
+
+===INPUT: luma===
+Pick the 4-5 most relevant AI or tech meetups in SF happening in the next 7 days. Include date and URL.
+{raw['luma'] or 'No Luma events found.'}
+
+===INPUT: funcheap===
+Pick the 3 most fun and interesting cheap/free SF events happening in the next 7 days. Include date and URL.
+{raw['funcheap'] or 'No events found.'}
+
+Now write the summaries. Use the exact ===SECTION: name=== format for each."""
+
+    result = llm_summarise(SYSTEM_SUMMARISER, prompt, max_tokens=2000)
+
+    # Parse the response into per-section dicts
+    sections = {}
+    current_key = None
+    current_lines = []
+
+    for line in result.split("\n"):
+        m = re.match(r"===SECTION:\s*(\w+)===", line.strip())
+        if m:
+            if current_key:
+                sections[current_key] = "\n".join(current_lines).strip()
+            current_key = m.group(1)
+            current_lines = []
+        elif current_key:
+            current_lines.append(line)
+
+    if current_key:
+        sections[current_key] = "\n".join(current_lines).strip()
+
+    return sections
 
 
 # ---------------------------------------------------------------------------
@@ -411,35 +426,24 @@ def send_email(subject: str, html: str) -> None:
 def main():
     print(f"Building digest for {today_str()}...")
 
-    print("  Fetching Simon Willison...")
-    simon = section_simon_willison()
+    print("  Fetching all sources...")
+    raw = fetch_all_raw()
 
-    print("  Fetching TLDR from Gmail...")
-    tldr = section_tldr()
+    print("  Summarising with LLM (single call)...")
+    summaries = summarise_all(raw)
 
-    print("  Fetching TechCrunch...")
-    tc = section_techcrunch()
-
-    print("  Fetching Product Hunt...")
-    ph = section_product_hunt()
-
-    print("  Fetching Lenny's Newsletter from Gmail...")
-    lenny = section_lenny()
-
-    print("  Fetching Luma SF events...")
-    luma = section_luma()
-
-    print("  Fetching Funcheap SF events...")
-    cheap = section_funcheap()
+    def get(key: str, fallback: str) -> str:
+        text = summaries.get(key, "").strip()
+        return md_to_html(text) if text else f"<p>{fallback}</p>"
 
     sections = {
-        "AI News: Simon Willison":    simon,
-        "AI News: TLDR":              tldr,
-        "Tech & Funding: TechCrunch": tc,
-        "Tech & Product: Product Hunt": ph,
-        "Product: Lenny's Newsletter": lenny,
-        "SF Meetups: Luma":           luma,
-        "Fun in SF: Funcheap":        cheap,
+        "AI News: Simon Willison":      get("simon",       "No summary available."),
+        "AI News: TLDR":                get("tldr",        "No TLDR email found in inbox."),
+        "Tech & Funding: TechCrunch":   get("techcrunch",  "No summary available."),
+        "Tech & Product: Product Hunt": get("producthunt", "No summary available."),
+        "Product: Lenny's Newsletter":  get("lenny",       "No Lenny email found in inbox."),
+        "SF Meetups: Luma":             get("luma",        "No Luma events found."),
+        "Fun in SF: Funcheap":          get("funcheap",    "No events found."),
     }
 
     html = build_html(sections)
