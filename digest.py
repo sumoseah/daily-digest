@@ -393,7 +393,7 @@ def send_email(subject: str, html: str) -> None:
             "Content-Type": "application/json",
         },
         json={
-            "from":    "Daily Digest <digest@yourdomain.com>",  # update to your verified Resend domain
+            "from":    "Daily Digest <onboarding@resend.dev>",
             "to":      [DIGEST_TO],
             "subject": subject,
             "html":    html,
