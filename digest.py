@@ -388,6 +388,10 @@ def main():
     print("  Fetching all sources...")
     raw = fetch_all_raw()
 
+    # Debug: show how much content was fetched per source
+    for k, v in raw.items():
+        print(f"    [{k}] {len(v)} chars fetched")
+
     print("  Summarising with LLM (single call)...")
     summaries = summarise_all(raw)
 
