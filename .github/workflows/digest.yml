@@ -1,0 +1,34 @@
+name: Daily Digest
+
+on:
+  schedule:
+    # 15:00 UTC = 7:00 AM PT (PST). In PDT (summer) adjust to 14:00 UTC.
+    - cron: "0 15 * * *"
+  workflow_dispatch: # lets you trigger manually from the Actions tab
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run digest
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          RESEND_API_KEY:     ${{ secrets.RESEND_API_KEY }}
+          GMAIL_ADDRESS:      ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASS:     ${{ secrets.GMAIL_APP_PASS }}
+          DIGEST_TO:          ${{ secrets.DIGEST_TO }}
+        run: python digest.py
