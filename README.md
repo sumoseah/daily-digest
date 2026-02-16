@@ -12,7 +12,9 @@ This project collapses all of that into a single email that's waiting in my inbo
 
 ---
 
-## Architecture
+## Architecture (v1.5)
+
+v1.5 adds an agentic **curate** step between fetch and summarise. The LLM now decides what's worth including, not just how to summarise it.
 
 ```mermaid
 flowchart TD
@@ -22,17 +24,24 @@ flowchart TD
     B --> C2[IMAP Fetcher\nTLDR Newsletter\nLenny's Newsletter\nvia Gmail]
     B --> C3[Web Scraper\nLuma SF events\nluma.com/sf]
 
-    C1 --> D[summarise_all\n7 sequential LLM calls\n15s delay between each]
+    C1 --> D[curate\none batched LLM call\nscores all items 0–1\nagainst user profile]
     C2 --> D
     C3 --> D
 
     D --> E[OpenRouter API\nmistral-small-3.1-24b-instruct:free]
     E --> D
 
-    D --> F[build_html\nMarkdown → HTML\nassemble sections]
-    F --> G[Resend API\nHTML email delivery]
-    G --> H[Inbox\n7am PT]
+    D --> F[summarise_all\neditorial intro + tiered summaries\n7 sequential LLM calls\n15s delay between each]
+    F --> E
+
+    F --> G[build_html\nMarkdown → HTML\nwith editorial intro block]
+    G --> H[Resend API\nHTML email delivery]
+    H --> I[Inbox\n7am PT]
+
+    F --> J[write_log\nlogs/YYYY-MM-DD.json]
 ```
+
+**Pipeline:** `fetch → curate (score + filter + rank) → summarise (editorial) → format → send`
 
 ---
 

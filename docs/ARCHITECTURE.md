@@ -1,4 +1,4 @@
-# Architecture
+# Architecture (v1.5)
 
 ## System Overview
 
@@ -8,7 +8,9 @@ Daily Digest is a single-file Python script (`digest.py`) orchestrated by GitHub
 
 | Component | Responsibility |
 |-----------|---------------|
-| `digest.py` | All application logic — fetching, summarising, assembling, sending |
+| `digest.py` | All application logic — fetching, curating, summarising, assembling, sending |
+| `config/user_profile.yaml` | User interest profile that drives LLM curation decisions |
+| `logs/YYYY-MM-DD.json` | Per-run metadata: fetch stats, curation scores, failures |
 | GitHub Actions | Scheduling, secret injection, execution environment, logging |
 | OpenRouter API | LLM inference (model-agnostic gateway) |
 | Resend API | Transactional email delivery |
@@ -20,22 +22,38 @@ Daily Digest is a single-file Python script (`digest.py`) orchestrated by GitHub
 
 ```
 1. FETCH       fetch_all_raw()
-               ├── fetch_rss()         → feedparser parses Atom/RSS feeds
+               ├── fetch_rss()          → feedparser parses Atom/RSS feeds
                ├── fetch_latest_email() → imaplib connects to Gmail via IMAP
-               └── fetch_luma_sf()     → requests + BeautifulSoup scrapes HTML
+               └── fetch_luma_sf()      → requests + BeautifulSoup scrapes HTML
+               Returns: raw dict + fetch_log (chars fetched, status, errors)
 
-2. PROCESS     Raw text is truncated to token-safe lengths (max 6,000 chars
-               per email source, 200 chars per RSS item summary)
+2. CURATE      curate(raw, profile)                           ← NEW in v1.5
+               └── ONE batched LLM call → scores all items 0–1 against
+                   config/user_profile.yaml interests
+               - Items below threshold (0.6) are filtered out
+               - always_include sources (simon, lenny) bypass threshold
+               - Items ranked by score, capped at max_items_per_source (5)
+               - On failure: degrades to include-all (v1.0 behavior)
 
-3. SUMMARISE   summarise_all()
-               └── llm_summarise() × 7  → sequential OpenRouter API calls
-                                          with 15s delay between each
+3. SUMMARISE   summarise_all(curated, raw)
+               ├── build_editorial_intro() → 1 LLM call, 2-3 sentence intro
+               └── summarise_section() × 7 → tiered summaries per source
+                   - high tier (≥0.8): 2-3 sentences with context
+                   - medium tier (0.6–0.79): one sentence
+                   - low tier (<0.6 but passed): headline + link only
+               15s delay between each call to respect rate limits
 
-4. FORMAT      build_html()
-               └── md_to_html()        → converts LLM markdown output to HTML
+4. FORMAT      build_html(summaries, editorial_intro, failed_sources)
+               ├── editorial intro block (styled callout)
+               ├── md_to_html() per section
+               └── failed sources note in footer
 
 5. DELIVER     send_email()
-               └── Resend API POST     → single HTML email to DIGEST_TO
+               └── Resend API POST → single HTML email to DIGEST_TO
+
+6. LOG         write_log()                                    ← NEW in v1.5
+               └── logs/YYYY-MM-DD.json → fetch stats, curation scores,
+                   top 3 items, failed sources
 ```
 
 Each stage passes data forward as plain Python dicts and strings. There are no queues, no async I/O, and no inter-process communication.
