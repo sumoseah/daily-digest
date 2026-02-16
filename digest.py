@@ -253,7 +253,7 @@ def summarise_all(raw: dict) -> dict:
     for key, user_prompt in tasks:
         print(f"    Summarising {key}...")
         results[key] = llm_summarise(SYSTEM_SUMMARISER, user_prompt, max_tokens=350)
-        time.sleep(8)  # 8s gap between calls to respect rate limits
+        time.sleep(15)  # 15s gap between calls to respect rate limits
 
     return results
 
