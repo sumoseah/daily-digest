@@ -2,6 +2,16 @@
 
 This file gives Claude Code context about the daily-digest project so any new session can pick up where the last one left off.
 
+## Version status
+
+| Version | Branch | Tag | Status |
+|---------|--------|-----|--------|
+| v1.0 | `main` | `v1.0` | Stable — runs daily at 7am, do not touch |
+| v1.5 | `v1.5` | — | In development — current branch |
+
+**Always develop on the `v1.5` branch. `main` is production.**
+When v1.5 is ready, open a PR from `v1.5` → `main` and merge.
+
 ---
 
 ## What this project is
