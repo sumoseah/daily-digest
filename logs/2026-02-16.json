@@ -1,6 +1,6 @@
 {
   "date": "2026-02-16",
-  "model": "google/gemma-3-12b-it:free",
+  "model": "anthropic/claude-haiku-4-5",
   "fetch": {
     "simon": {
       "chars": 2426,
@@ -33,32 +33,54 @@
       "error": "JS-rendered page returned no events"
     },
     "funcheap": {
-      "chars": 1440,
+      "chars": 1483,
       "status": "ok",
       "error": null
     }
   },
   "curation": {
-    "error": "Unterminated string starting at: line 113 column 7 (char 4717)",
-    "fallback": true
+    "simon": {
+      "total_scored": 8,
+      "passed_filter": 5
+    },
+    "tldr": {
+      "total_scored": 1,
+      "passed_filter": 1
+    },
+    "techcrunch": {
+      "total_scored": 5,
+      "passed_filter": 5
+    },
+    "producthunt": {
+      "total_scored": 5,
+      "passed_filter": 5
+    },
+    "lenny": {
+      "total_scored": 1,
+      "passed_filter": 1
+    },
+    "funcheap": {
+      "total_scored": 0,
+      "passed_filter": 0
+    }
   },
   "top_3_items": [
     {
       "source": "simon",
-      "title": "- Rodney and Claude Code for Desktop: https://simonwillison.net/2026/Feb/16/rodney-claude-code/#atom-everything\n  I'm a very heavy user of Claude Code on the web, Anthropic's excellent but poorly name",
-      "score": 1.0,
+      "title": "Three months of OpenClaw",
+      "score": 0.88,
+      "tier": "high"
+    },
+    {
+      "source": "simon",
+      "title": "Rodney and Claude Code for Desktop",
+      "score": 0.85,
       "tier": "high"
     },
     {
       "source": "tldr",
-      "title": "OpenClaw's creator will join OpenAI to develop accessible agents and\r\nensure OpenClaw remains open and independent within a new\r\nfoundation\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c",
-      "score": 1.0,
-      "tier": "high"
-    },
-    {
-      "source": "techcrunch",
-      "title": "- Have money, will travel: a16z\u2019s hunt for the next European unicorn: https://techcrunch.com/2026/02/16/have-money-will-travel-a16zs-hunt-for-the-next-european-unicorn/\n- How Ricursive Intelligence ra",
-      "score": 1.0,
+      "title": "OpenClaw: How to Securely Adopt the Newest AI Agent Sensation",
+      "score": 0.84,
       "tier": "high"
     }
   ],

@@ -36,7 +36,7 @@ GMAIL_ADDRESS      = os.environ["GMAIL_ADDRESS"]
 GMAIL_APP_PASS     = os.environ["GMAIL_APP_PASS"]
 DIGEST_TO          = os.environ.get("DIGEST_TO", GMAIL_ADDRESS)
 
-OPENROUTER_MODEL = "google/gemma-3-12b-it:free"
+OPENROUTER_MODEL = "anthropic/claude-haiku-4-5"
 OPENROUTER_URL   = "https://openrouter.ai/api/v1/chat/completions"
 
 # ---------------------------------------------------------------------------
@@ -74,7 +74,8 @@ def llm_call(system_prompt: str, user_content: str, max_tokens: int = 800) -> st
         json={
             "model": OPENROUTER_MODEL,
             "messages": [
-                {"role": "user", "content": f"{system_prompt}\n\n{user_content}"},
+                {"role": "system", "content": system_prompt},
+                {"role": "user",   "content": user_content},
             ],
             "max_tokens": max_tokens,
             "temperature": 0.3,
@@ -513,7 +514,7 @@ def summarise_all(curated: dict, raw: dict) -> tuple[dict, str]:
 
     print("    Generating editorial intro...")
     editorial_intro = build_editorial_intro(curated, profile)
-    time.sleep(15)
+    time.sleep(3)
 
     summaries = {}
     source_order = ["simon", "tldr", "techcrunch", "producthunt", "lenny", "luma", "funcheap"]
@@ -525,7 +526,7 @@ def summarise_all(curated: dict, raw: dict) -> tuple[dict, str]:
             continue
         print(f"    Summarising {key} ({len(items)} items)...")
         summaries[key] = summarise_section(key, items, raw.get(key, ""))
-        time.sleep(15)
+        time.sleep(3)
 
     return summaries, editorial_intro
 

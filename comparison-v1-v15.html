@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>v1.0 vs v1.5 Comparison — Daily Digest</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    background: #f3f4f6;
+  }
+  .comparison-header {
+    background: #1f2937;
+    color: #f9fafb;
+    padding: 20px 32px;
+  }
+  .comparison-header h1 {
+    font-size: 18px;
+    margin: 0 0 4px;
+    font-weight: 600;
+  }
+  .comparison-header p {
+    font-size: 13px;
+    color: #9ca3af;
+    margin: 0;
+  }
+  .notes-panel {
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 20px 32px;
+  }
+  .notes-panel h2 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6b7280;
+    margin: 0 0 12px;
+  }
+  .diff-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .diff-table th {
+    background: #f3f4f6;
+    padding: 7px 12px;
+    text-align: left;
+    border-bottom: 2px solid #e5e7eb;
+    white-space: nowrap;
+  }
+  .diff-table td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .diff-table tr:last-child td { border-bottom: none; }
+  .diff-table td:first-child { font-weight: 500; white-space: nowrap; color: #374151; }
+  .tag-new {
+    display: inline-block;
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-right: 4px;
+  }
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+  }
+  .column {
+    padding: 24px;
+    background: white;
+    border-right: 1px solid #e5e7eb;
+  }
+  .column-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    margin: -24px -24px 20px;
+    border-bottom: 3px solid;
+  }
+  .v10 .column-header { background: #fef3c7; border-color: #f59e0b; }
+  .v15 .column-header { background: #ede9fe; border-color: #7c3aed; }
+  .badge {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; padding: 3px 8px; border-radius: 4px;
+  }
+  .v10 .badge { background: #f59e0b; color: white; }
+  .v15 .badge { background: #7c3aed; color: white; }
+  .column-header .title { font-size: 13px; font-weight: 600; color: #1f2937; }
+  .column-header .subtitle { font-size: 12px; color: #6b7280; margin-left: auto; }
+  .callout {
+    background: #ede9fe; border-left: 3px solid #7c3aed;
+    border-radius: 0 4px 4px 0; padding: 7px 11px; margin: 0 0 14px;
+    font-size: 12px; color: #5b21b6; line-height: 1.5;
+  }
+  .callout strong { color: #4c1d95; }
+  .callout-absent {
+    background: #fff7ed; border-left: 3px solid #f59e0b;
+    border-radius: 0 4px 4px 0; padding: 7px 11px; margin: 0 0 14px;
+    font-size: 12px; color: #92400e; line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="comparison-header">
+  <h1>v1.0 vs v1.5 — Daily Digest Side-by-Side</h1>
+  <p>Monday, February 16, 2026 · Same source data · Both running Claude Haiku 4.5 via OpenRouter</p>
+</div>
+
+<div class="notes-panel">
+  <h2>What changed between versions</h2>
+  <table class="diff-table">
+    <tr>
+      <th>Feature</th>
+      <th>v1.0 — original</th>
+      <th>v1.5 — current</th>
+    </tr>
+    <tr>
+      <td>Pipeline</td>
+      <td>fetch → summarise → send</td>
+      <td>fetch → <strong>curate</strong> → summarise (tiered) → send</td>
+    </tr>
+    <tr>
+      <td>Relevance filtering</td>
+      <td>None — all items summarised equally</td>
+      <td><span class="tag-new">NEW</span> Items scored 0–1 against your profile; threshold 0.6 cuts low-quality items</td>
+    </tr>
+    <tr>
+      <td>Editorial intro</td>
+      <td>None — jumps straight to sections</td>
+      <td><span class="tag-new">NEW</span> LLM synthesises the day's most important theme (purple callout at top)</td>
+    </tr>
+    <tr>
+      <td>Summary depth</td>
+      <td>Flat — same treatment for all items</td>
+      <td><span class="tag-new">NEW</span> High ≥0.8: 2–3 sentences · Medium 0.6–0.79: one-liner · Low: link only</td>
+    </tr>
+    <tr>
+      <td>Items shown</td>
+      <td>Everything fetched (no filter)</td>
+      <td>Only items above relevance threshold — e.g. funcheap filtered to 0 today</td>
+    </tr>
+    <tr>
+      <td>Run log</td>
+      <td>None</td>
+      <td><span class="tag-new">NEW</span> logs/YYYY-MM-DD.json — fetch stats, scores, top 3 items</td>
+    </tr>
+    <tr>
+      <td>LLM calls/run</td>
+      <td>7 (one per section)</td>
+      <td>9 (1 curate + 1 intro + 7 sections) · Run time ~45s vs ~3 min before</td>
+    </tr>
+  </table>
+</div>
+
+<div class="columns">
+  <div class="column v10">
+    <div class="column-header">
+      <span class="badge">v1.0</span>
+      <span class="title">Original pipeline</span>
+      <span class="subtitle">main branch · fetch → summarise</span>
+    </div>
+    <div class="callout-absent">
+      <strong>No editorial intro.</strong> v1.0 summarises each source independently with no awareness of what's in the other sections.
+    </div>
+    <div class="callout-absent">
+      <strong>No curation filter.</strong> All fetched items are summarised with equal weight — including low-relevance content like the Luma section (which returns nothing) and generic funcheap events.
+    </div>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; color: #1f2937; max-width: 640px; margin: 0 auto; padding: 24px 16px;">
+            <h1 style="font-size:22px; font-weight:700; margin-bottom:4px;">
+                Good morning ☀️
+            </h1>
+            <p style="color:#6b7280; margin-top:0; margin-bottom:32px;">
+                Your daily digest for Monday, February 16, 2026
+            </p>
+            
+        <div style="margin-bottom: 32px;">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px;">🔬 AI News: Simon Willison</div>
+            <p># Simon Willison's Blog - Top Posts</p>
+<p>• <strong>Rodney and Claude Code for Desktop</strong> - <a href="https://simonwillison.net/2026/Feb/16/rodney-claude-code/#atom-everything">https://simonwillison.net/2026/Feb/16/rodney-claude-code/#atom-everything</a></p>
+<p>Heavy user perspective on Claude Code, Anthropic's cloud-based container environment version that's excellent but poorly marketed.</p>
+<p>• <strong>The AI Vampire</strong> - <a href="https://simonwillison.net/2026/Feb/15/the-ai-vampire/#atom-everything">https://simonwillison.net/2026/Feb/15/the-ai-vampire/#atom-everything</a></p>
+<p>Steve Yegge explores agent fatigue and its connection to burnout, examining scenarios where you're the only AI user at your company.</p>
+<p>• <strong>How Generative and Agentic AI Shift Concern from Technical Debt to Cognitive Debt</strong> - <a href="https://simonwillison.net/2026/Feb/15/cognitive-debt/#atom-everything">https://simonwillison.net/2026/Feb/15/cognitive-debt/#atom-everything</a></p>
+<p>Margaret-Anne Storey's explanation of cognitive debt—how AI changes what we need to worry about in software development.</p>
+<p>• <strong>Gwtar: a static efficient single-file HTML format</strong> - <a href="https://simonwillison.net/2026/Feb/15/gwtar/#atom-everything">https://simonwillison.net/2026/Feb/15/gwtar/#atom-everything</a></p>
+<p>New project from Gwern Branwen and Said Achmiz that solves combining multiple assets into a single archived HTML file.</p>
+        </div>
+        
+        <div style="margin-bottom: 32px;">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px;">📰 AI News: TLDR</div>
+            <p># Top AI/Tech Stories</p>
+<p>• <strong>OpenClaw creator joins OpenAI</strong> — The open-source agent tool's creator will work with OpenAI to develop accessible agents while keeping OpenClaw independent within a new foundation.</p>
+<p>• <strong>ChatGPT gets Lockdown Mode</strong> — OpenAI added optional Lockdown Mode for high-risk workflows and "Elevated Risk" labels for features vulnerable to prompt-injection attacks.</p>
+<p>• <strong>Grok Build adds Parallel Agents</strong> — xAI's coding assistant will soon support up to eight simultaneous coding agents and Arena Mode for agent competition, moving toward a full IDE experience.</p>
+<p>• <strong>AGI timeline skepticism</strong> — Despite CEO claims of imminent human-level AI, fundamental Transformer limitations suggest breakthroughs could take decades of research.</p>
+        </div>
+        
+        <div style="margin-bottom: 32px;">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px;">💰 Tech & Funding: TechCrunch</div>
+            <p># Top Startup Funding News</p>
+<p>• <strong>Ricursive Intelligence</strong> – $335M at $4B valuation in 4 months</p>
+<p><a href="https://techcrunch.com/2026/02/16/how-ricursive-intelligence-raised-335m-at-a-4b-valuation-in-4-months/">https://techcrunch.com/2026/02/16/how-ricursive-intelligence-raised-335m-at-a-4b-valuation-in-4-months/</a></p>
+<p>• <strong>Neysa</strong> – Up to $1.2B financing backed by Blackstone for AI infrastructure in India</p>
+<p><a href="https://techcrunch.com/2026/02/15/blackstone-backs-neysa-in-up-to-1-2b-financing-as-india-pushes-to-build-domestic-ai-compute/">https://techcrunch.com/2026/02/15/blackstone-backs-neysa-in-up-to-1-2b-financing-as-india-pushes-to-build-domestic-ai-compute/</a></p>
+<p>• <strong>Terra Industries</strong> – Additional $22M raised in one month (African defensetech startup)</p>
+<p><a href="https://techcrunch.com/2026/02/16/terra-industries-raises-22-million/">https://techcrunch.com/2026/02/16/terra-industries-raises-22-million/</a></p>
+<p>• <strong>C2i</strong> – Backed by Peak XV to address AI data center power constraints</p>
+<p><a href="https://techcrunch.com/2026/02/15/as-ai-data-centers-hit-power-limits-peak-xv-backs-indian-startup-c2i-to-fix-the-bottleneck/">https://techcrunch.com/2026/02/15/as-ai-data-centers-hit-power-limits-peak-xv-backs-indian-startup-c2i-to-fix-the-bottleneck/</a></p>
+        </div>
+        
+        <div style="margin-bottom: 32px;">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px;">🚀 Tech & Product: Product Hunt</div>
+            <p># Top 5 New Products</p>
+<p>• <strong>Base44 Backend Platform</strong> – Low-code backend infrastructure for building APIs and databases without boilerplate. <a href="https://www.producthunt.com/products/base44">https://www.producthunt.com/products/base44</a></p>
+<p>• <strong>CoThou Autonomous Superagent</strong> – AI agent that handles complex multi-step tasks autonomously with minimal human input. <a href="https://www.producthunt.com/products/seamlessity">https://www.producthunt.com/products/seamlessity</a></p>
+<p>• <strong>Plus AI Presentation Agent</strong> – Generates and edits presentations automatically from prompts or documents. <a href="https://www.producthunt.com/products/plus-ai-presentation-agent">https://www.producthunt.com/products/plus-ai-presentation-agent</a></p>
+<p>• <strong>Toolspend</strong> – Tracks and optimizes spending across your SaaS tools and subscriptions. <a href="https://www.producthunt.com/products/toolspend">https://www.producthunt.com/products/toolspend</a></p>
+<p>• <strong>HookWatch</strong> – Monitors webhook deliveries and debugging for API integrations in real-time. <a href="https://www.producthunt.com/products/hookwatch">https://www.producthunt.com/products/hookwatch</a></p>
+        </div>
+        
+        <div style="margin-bottom: 32px;">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px;">💡 Product: Lenny's Newsletter</div>
+            <p>I can see this is Lenny's Newsletter's introduction/masthead, but it doesn't contain the actual "Best of 2026" content with key ideas and takeaways. The text cuts off mid-sentence.</p>
+<p>To give you an accurate 4-5 bullet point summary, I'd need to see the full article content. Could you share the complete text of the newsletter edition? That way I can extract the actual key ideas and takeaways rather than just the introduction.</p>
+        </div>
+        
+        <div style="margin-bottom: 32px;">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px;">🤝 SF Meetups: Luma</div>
+            <p>I don't have access to real-time event data or the ability to browse current meetup websites. To find AI and tech meetups in SF this week, I'd recommend:</p>
+<p>• <strong>Meetup.com</strong> – Filter by location (San Francisco), category (AI/Tech), and date range</p>
+<p>• <strong>Eventbrite</strong> – Search "AI meetup San Francisco" with date filters</p>
+<p>• <strong>Lunchclub</strong> – Tech networking events in the Bay Area</p>
+<p>• <strong>LinkedIn Events</strong> – Check local tech community postings</p>
+<p>• <strong>Startup House SF</strong> – Often hosts tech talks and networking</p>
+<p>These platforms update daily and will show you current events with exact dates and registration links.</p>
+        </div>
+        
+        <div style="margin-bottom: 32px;">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px;">🎉 Fun in SF: Funcheap</div>
+            <p># Top 3 Fun & Free SF Events This Week</p>
+<ul>
+  <li><strong>Thrive City Lunar New Year Celebration</strong> – Saturday, 2/21</li>
+</ul>
+<p><a href="https://sf.funcheap.com/thrive-city-lunar-year-celebration-2026/">https://sf.funcheap.com/thrive-city-lunar-year-celebration-2026/</a></p>
+<ul>
+  <li><strong>"Off Algo" Unplugged Guided Walk Through Conservatory of Flowers</strong> – Saturday, 2/21 (Golden Gate Park)</li>
+</ul>
+<p><a href="https://sf.funcheap.com/algo-unplugged-guided-walk-sfs-conservatory-flowers-gg-park/">https://sf.funcheap.com/algo-unplugged-guided-walk-sfs-conservatory-flowers-gg-park/</a></p>
+<ul>
+  <li><strong>SF Music Week 2026</strong> – Starts Monday, 2/23 (runs through 3/1)</li>
+</ul>
+<p><a href="https://sf.funcheap.com/sf-music-week-2026-feb-23-march-1/">https://sf.funcheap.com/sf-music-week-2026-feb-23-march-1/</a></p>
+        </div>
+        
+            <p style="color:#9ca3af; font-size:12px; margin-top:40px; border-top:1px solid #e5e7eb; padding-top:16px;">
+                Generated automatically · <a href="https://github.com" style="color:#9ca3af;">View source</a>
+            </p>
+        </div>
+  </div>
+
+  <div class="column v15">
+    <div class="column-header">
+      <span class="badge">v1.5</span>
+      <span class="title">Agentic pipeline</span>
+      <span class="subtitle">v1.5 branch · fetch → curate → summarise</span>
+    </div>
+    <div class="callout">
+      <strong>Editorial intro (purple block below):</strong> written after seeing all sources — highlights today's dominant theme (OpenClaw) and the more interesting thread (cognitive debt) with an opinion on what's worth reading.
+    </div>
+    <div class="callout">
+      <strong>Curation active:</strong> 5/8 Simon items passed · funcheap filtered to 0 (art walks not relevant) · items ranked by score before summarising.
+    </div>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; color: #1f2937; max-width: 640px; margin: 0 auto; padding: 24px 16px;">
+            <h1 style="font-size:22px; font-weight:700; margin-bottom:4px;">
+                Good morning ☀️
+            </h1>
+            <p style="color:#6b7280; margin-top:0; margin-bottom:24px;">
+                Your daily digest for Monday, February 16, 2026
+            </p>
+            <div style="background: #f9fafb; border-left: 3px solid #6366f1; padding: 12px 16px; margin-bottom: 32px; border-radius: 0 6px 6px 0; font-style: italic; color: #374151;">OpenClaw is dominating the conversation today, with practical implementation guides competing against skeptical takes on whether the hype matches reality. The more interesting thread runs through cognitive debt—how agentic systems shift our architectural concerns from technical infrastructure to reasoning quality and decision transparency. Worth digging into both the adoption playbook and the critical perspective before committing to your stack.</div>
+            
+        <div style="margin-bottom: 32px;">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px;">🔬 AI News: Simon Willison</div>
+            <p># High-Relevance Items</p>
+<p>• <strong>Three months of OpenClaw</strong> <a href="https://simonwillison.net/2026/Feb/15/openclaw/#atom-everything">https://simonwillison.net/2026/Feb/15/openclaw/#atom-everything</a></p>
+<p>Progress update on OpenClaw project after three months of development. Provides practical insights into building with modern AI tools and frameworks.</p>
+<p>• <strong>Rodney and Claude Code for Desktop</strong> <a href="https://simonwillison.net/2026/Feb/16/rodney-claude/#atom-everything">https://simonwillison.net/2026/Feb/16/rodney-claude/#atom-everything</a></p>
+<p>Covers Claude's desktop coding capabilities and integration with Rodney. Relevant for developers exploring AI-assisted development workflows and local tooling.</p>
+<p>• <strong>How Generative and Agentic AI Shift Concern from Technical Debt to Cognitive Debt</strong> <a href="https://simonwillison.net/2026/Feb/15/cognitive-debt/#atom-everything">https://simonwillison.net/2026/Feb/15/cognitive-debt/#atom-everything</a></p>
+<p>Explores the emerging concept of cognitive debt as AI systems become more autonomous. Important for understanding how AI changes software engineering priorities beyond traditional technical debt.</p>
+<p># Low-Relevance Items</p>
+<p>• <strong>Deep Blue</strong> <a href="https://simonwillison.net/2026/Feb/15/deep-blue/#atom-everything">https://simonwillison.net/2026/Feb/15/deep-blue/#atom-everything</a></p>
+<p>• <strong>The AI Vampire</strong> <a href="https://simonwillison.net/2026/Feb/15/the-ai-vampire/#atom-everything">https://simonwillison.net/2026/Feb/15/the-ai-vampire/#atom-everything</a></p>
+        </div>
+        
+        <div style="margin-bottom: 32px;">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px;">📰 AI News: TLDR</div>
+            <p># High-Relevance Items</p>
+<p><strong>OpenClaw Creator Joins OpenAI</strong></p>
+<ul>
+  <li>OpenClaw's creator is moving to OpenAI to develop accessible AI agents while keeping OpenClaw open and independent through a new foundation. This matters because OpenClaw is extremely popular (120K+ GitHub stars) but risky—it operates with user permissions and can act on their behalf. OpenAI's backing provides resources and legitimacy while preserving the open-source model.</li>
+  <li><a href="https://example.com">Read more</a> (3-minute read)</li>
+</ul>
+<p><strong>ChatGPT Introduces Lockdown Mode</strong></p>
+<ul>
+  <li>OpenAI added optional Lockdown Mode for high-risk workflows and "Elevated Risk" labels for features vulnerable to prompt-injection attacks in ChatGPT, ChatGPT Atlas, and Codex. This directly addresses security concerns as AI agents become more powerful and autonomous.</li>
+</ul>
+        </div>
+        
+        <div style="margin-bottom: 32px;">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px;">💰 Tech & Funding: TechCrunch</div>
+            <p># High-Relevance</p>
+<p>• <strong>OpenClaw hype doesn't match reality</strong> – <a href="https://techcrunch.com/2026/02/16/after-all-the-hype-some-ai-experts-dont-think-openclaw-is-all-that-exciting/">https://techcrunch.com/2026/02/16/after-all-the-hype-some-ai-experts-dont-think-openclaw-is-all-that-exciting/</a></p>
+<p>AI experts are pushing back on OpenClaw's market excitement, suggesting the technology may be overhyped relative to actual capabilities. This matters because it signals potential correction in AI valuation expectations.</p>
+<p>• <strong>Enterprise AI infrastructure race heating up</strong> – <a href="https://techcrunch.com/2026/02/15/the-enterprise-ai-land-grab-is-on-glean-is-building-the-layer-beneath-the-interface/">https://techcrunch.com/2026/02/15/the-enterprise-ai-land-grab-is-on-glean-is-building-the-layer-beneath-the-interface/</a></p>
+<p>Glean is positioning itself as the foundational layer for enterprise AI rather than competing at the interface level. This approach could prove more defensible and valuable than consumer-facing AI tools.</p>
+<p># Medium-Relevance</p>
+<p>• OpenClaw creator Peter Steinberger joins OpenAI – <a href="https://techcrunch.com/2026/02/15/openclaw-creator-peter-steinberger-joins-openai/">https://techcrunch.com/2026/02/15/openclaw-creator-peter-steinberger-joins-openai/</a></p>
+<p>• Ricursive Intelligence raised $335M at $4B valuation in 4 months – <a href="https://techcrunch.com/2026/02/16/how-ricursive-intelligence-raised-335m-at-a-4b-valuation-in-4-months/">https://techcrunch.com/2026/02/16/how-ricursive-intelligence-raised-335m-at-a-4b-valuation-in-4-months/</a></p>
+<p>• Flapping Airplanes exploring radical AI approaches – <a href="https://techcrunch.com/2026/02/16/flapping-airplanes-on-the-future-of-ai-we-want-to-try-really-radically-different-things/">https://techcrunch.com/2026/02/16/flapping-airplanes-on-the-future-of-ai-we-want-to-try-really-radically-different-things/</a></p>
+        </div>
+        
+        <div style="margin-bottom: 32px;">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px;">🚀 Tech & Product: Product Hunt</div>
+            <p># Medium-Relevance Items</p>
+<p>• <strong>CoThou Autonomous Superagent</strong> – <a href="https://www.producthunt.com/products/seamlessity">https://www.producthunt.com/products/seamlessity</a></p>
+<p>An autonomous agent system designed to handle complex tasks independently.</p>
+<p>• <strong>Agent Bar</strong> – <a href="https://www.producthunt.com/products/agent-bar">https://www.producthunt.com/products/agent-bar</a></p>
+<p>A toolbar interface for managing and accessing AI agents.</p>
+<p>• <strong>JDoodle.ai MCP</strong> – <a href="https://www.producthunt.com/products/jdoodle-ai">https://www.producthunt.com/products/jdoodle-ai</a></p>
+<p>An AI coding platform with model context protocol integration.</p>
+<p>• <strong>NVIDIA PersonaPlex</strong> – <a href="https://www.producthunt.com/products/nvidia">https://www.producthunt.com/products/nvidia</a></p>
+<p>NVIDIA's tool for creating and managing AI personas.</p>
+<p>• <strong>PenguinBot AI</strong> – <a href="https://www.producthunt.com/products/penguinbot-ai">https://www.producthunt.com/products/penguinbot-ai</a></p>
+<p>An AI bot solution for automation and task management.</p>
+        </div>
+        
+        <div style="margin-bottom: 32px;">
+            <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px;">💡 Product: Lenny's Newsletter</div>
+            <p># Low-Relevance Items</p>
+<ul>
+  <li><strong>Best of Lenny's Newsletter 2026</strong> – <a href="https://www.lennysnewsletter.com/p/best-of-lennys-newsletter-2026">https://www.lennysnewsletter.com/p/best-of-lennys-newsletter-2026</a></li>
+</ul>
+        </div>
+        
+            <p style="color:#9ca3af; font-size:12px; margin-top:16px;">⚠️ Unavailable today: Luma SF</p>
+            <p style="color:#9ca3af; font-size:12px; margin-top:40px; border-top:1px solid #e5e7eb; padding-top:16px;">
+                Generated automatically · <a href="https://github.com/sumoseah/daily-digest" style="color:#9ca3af;">View source</a>
+            </p>
+        </div>
+  </div>
+</div>
+
+</body>
+</html>
