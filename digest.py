@@ -721,8 +721,8 @@ def write_log(fetch_log: dict, curation_log: dict, curated: dict) -> None:
 # Main
 # ---------------------------------------------------------------------------
 
-def main():
-    print(f"Building digest v1.5 for {today_str()}...")
+def main(dry_run: bool = False):
+    print(f"Building digest v1.5 for {today_str()}..." + (" [DRY RUN]" if dry_run else ""))
     profile = load_profile()
 
     # 1. FETCH
@@ -741,25 +741,50 @@ def main():
         if k not in ("error", "fallback"):
             print(f"    [{k}] {v.get('passed_filter', 0)}/{v.get('total_scored', 0)} items passed filter")
 
-    # 3. SUMMARISE — editorial voice, one call per source + intro
-    print("  Summarising with editorial voice...")
-    summaries, editorial_intro = summarise_all(curated, raw)
-    for k, v in summaries.items():
-        if v:
-            print(f"    [{k}] {len(v)} chars — {repr(v[:60])}")
+    if dry_run:
+        print("\n  --- CURATION SCORES (dry run) ---")
+        for source_key, items in curated.items():
+            if items:
+                print(f"  {source_key}:")
+                for item in items:
+                    print(f"    [{item.get('score', 0):.2f} {item.get('tier','?'):6s}] {item.get('title','')[:80]}")
 
-    # 4. FORMAT + SEND
+    # 3. SUMMARISE — editorial voice, one call per source + intro
+    print("\n  Summarising with editorial voice...")
+    summaries, editorial_intro = summarise_all(curated, raw)
+
+    if dry_run:
+        print("\n  --- EDITORIAL INTRO (dry run) ---")
+        print(f"  {editorial_intro}\n")
+        print("  --- SECTION SUMMARIES (dry run) ---")
+        for k, v in summaries.items():
+            if v:
+                print(f"\n  [{k}]\n  {v[:300]}")
+
+    # 4. FORMAT
     html = build_html(summaries, editorial_intro, failed_sources)
     subject = f"Your Daily Digest — {today_str()}"
 
-    print("  Sending email via Resend...")
-    send_email(subject, html)
+    if dry_run:
+        # Save HTML to file for inspection instead of sending
+        out_path = Path(__file__).parent / f"dry-run-{today_iso()}.html"
+        out_path.write_text(html)
+        print(f"\n  [DRY RUN] Email NOT sent. HTML saved to: {out_path}")
+        print(f"  Open with: open {out_path}")
+    else:
+        print("  Sending email via Resend...")
+        send_email(subject, html)
 
     # 5. LOG
     write_log(fetch_log, curation_log, curated)
 
-    print("Done.")
+    print("\nDone.")
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Run full pipeline but skip sending email. Prints HTML to stdout.")
+    args = parser.parse_args()
+    main(dry_run=args.dry_run)
