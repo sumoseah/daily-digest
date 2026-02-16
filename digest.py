@@ -46,8 +46,7 @@ def llm_summarise(system_prompt: str, user_content: str, max_tokens: int = 600) 
             json={
                 "model": OPENROUTER_MODEL,
                 "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user",   "content": user_content},
+                    {"role": "user", "content": f"{system_prompt}\n\n{user_content}"},
                 ],
                 "max_tokens": max_tokens,
                 "temperature": 0.3,
