@@ -36,7 +36,7 @@ GMAIL_ADDRESS      = os.environ["GMAIL_ADDRESS"]
 GMAIL_APP_PASS     = os.environ["GMAIL_APP_PASS"]
 DIGEST_TO          = os.environ.get("DIGEST_TO", GMAIL_ADDRESS)
 
-OPENROUTER_MODEL = "mistralai/mistral-small-3.1-24b-instruct:free"
+OPENROUTER_MODEL = "google/gemma-3-12b-it:free"
 OPENROUTER_URL   = "https://openrouter.ai/api/v1/chat/completions"
 
 # ---------------------------------------------------------------------------
@@ -74,8 +74,7 @@ def llm_call(system_prompt: str, user_content: str, max_tokens: int = 800) -> st
         json={
             "model": OPENROUTER_MODEL,
             "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user",   "content": user_content},
+                {"role": "user", "content": f"{system_prompt}\n\n{user_content}"},
             ],
             "max_tokens": max_tokens,
             "temperature": 0.3,
