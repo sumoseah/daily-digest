@@ -24,7 +24,7 @@ GMAIL_APP_PASS     = os.environ["GMAIL_APP_PASS"]     # 16-char app password
 DIGEST_TO          = os.environ.get("DIGEST_TO", GMAIL_ADDRESS)  # who to send to
 
 # Free model on OpenRouter (no payment required)
-OPENROUTER_MODEL = "google/gemma-3-4b-it:free"
+OPENROUTER_MODEL = "mistralai/mistral-small-3.1-24b-instruct:free"
 OPENROUTER_URL   = "https://openrouter.ai/api/v1/chat/completions"
 
 
@@ -46,7 +46,8 @@ def llm_summarise(system_prompt: str, user_content: str, max_tokens: int = 600) 
             json={
                 "model": OPENROUTER_MODEL,
                 "messages": [
-                    {"role": "user", "content": f"{system_prompt}\n\n{user_content}"},
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user",   "content": user_content},
                 ],
                 "max_tokens": max_tokens,
                 "temperature": 0.3,
