@@ -23,6 +23,7 @@ import time
 import yaml
 import feedparser
 import requests
+import anthropic
 from bs4 import BeautifulSoup
 from pathlib import Path
 
@@ -30,14 +31,13 @@ from pathlib import Path
 # Config — all sensitive values come from environment variables / GH Secrets
 # ---------------------------------------------------------------------------
 
-OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
-RESEND_API_KEY     = os.environ["RESEND_API_KEY"]
-GMAIL_ADDRESS      = os.environ["GMAIL_ADDRESS"]
-GMAIL_APP_PASS     = os.environ["GMAIL_APP_PASS"]
-DIGEST_TO          = os.environ.get("DIGEST_TO", GMAIL_ADDRESS)
+ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
+RESEND_API_KEY    = os.environ["RESEND_API_KEY"]
+GMAIL_ADDRESS     = os.environ["GMAIL_ADDRESS"]
+GMAIL_APP_PASS    = os.environ["GMAIL_APP_PASS"]
+DIGEST_TO         = os.environ.get("DIGEST_TO", GMAIL_ADDRESS)
 
-OPENROUTER_MODEL = "anthropic/claude-haiku-4-5"
-OPENROUTER_URL   = "https://openrouter.ai/api/v1/chat/completions"
+ANTHROPIC_MODEL = "claude-haiku-4-5"  # ~$0.018/day at current usage
 
 # ---------------------------------------------------------------------------
 # Load user profile
@@ -62,28 +62,17 @@ def today_iso() -> str:
 
 
 def llm_call(system_prompt: str, user_content: str, max_tokens: int = 800) -> str:
-    """Call OpenRouter and return the response text. Raises on failure."""
-    resp = requests.post(
-        OPENROUTER_URL,
-        headers={
-            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/sumoseah/daily-digest",
-            "X-Title": "Daily Digest",
-        },
-        json={
-            "model": OPENROUTER_MODEL,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user",   "content": user_content},
-            ],
-            "max_tokens": max_tokens,
-            "temperature": 0.3,
-        },
-        timeout=45,
+    """Call Anthropic Claude directly and return the response text. Raises on failure."""
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    message = client.messages.create(
+        model=ANTHROPIC_MODEL,
+        max_tokens=max_tokens,
+        system=system_prompt,
+        messages=[
+            {"role": "user", "content": user_content},
+        ],
     )
-    resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"].strip()
+    return message.content[0].text.strip()
 
 
 # ---------------------------------------------------------------------------
@@ -702,7 +691,7 @@ def write_log(fetch_log: dict, curation_log: dict, curated: dict) -> None:
 
     log = {
         "date": today_iso(),
-        "model": OPENROUTER_MODEL,
+        "model": ANTHROPIC_MODEL,
         "fetch": fetch_log,
         "curation": curation_log,
         "top_3_items": all_items[:3],
