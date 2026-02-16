@@ -1,0 +1,68 @@
+{
+  "date": "2026-02-15",
+  "model": "mistralai/mistral-small-3.1-24b-instruct:free",
+  "fetch": {
+    "simon": {
+      "chars": 2408,
+      "status": "ok",
+      "error": null
+    },
+    "tldr": {
+      "chars": 6000,
+      "status": "ok",
+      "error": null
+    },
+    "techcrunch": {
+      "chars": 2582,
+      "status": "ok",
+      "error": null
+    },
+    "producthunt": {
+      "chars": 1259,
+      "status": "ok",
+      "error": null
+    },
+    "lenny": {
+      "chars": 6000,
+      "status": "ok",
+      "error": null
+    },
+    "luma": {
+      "chars": 0,
+      "status": "failed",
+      "error": "JS-rendered page returned no events"
+    },
+    "funcheap": {
+      "chars": 1440,
+      "status": "ok",
+      "error": null
+    }
+  },
+  "curation": {
+    "error": "429 Client Error: Too Many Requests for url: https://openrouter.ai/api/v1/chat/completions",
+    "fallback": true
+  },
+  "top_3_items": [
+    {
+      "source": "simon",
+      "title": "- The AI Vampire: https://simonwillison.net/2026/Feb/15/the-ai-vampire/#atom-everything\n  The AI Vampire\nSteve Yegge's take on agent fatigue, and its relationship to burnout.\n\nLet's pretend you're the",
+      "score": 1.0,
+      "tier": "high"
+    },
+    {
+      "source": "tldr",
+      "title": "GPT-5.3-Codex-Spark is a smaller ultra-fast coding model optimized for\r\nreal-time use in Codex and capable of generating over 1,000 tokens per\r\nsecond\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c\u00a0\u200c",
+      "score": 1.0,
+      "tier": "high"
+    },
+    {
+      "source": "techcrunch",
+      "title": "- As AI data centers hit power limits, Peak XV backs Indian startup C2i to fix the bottleneck: https://techcrunch.com/2026/02/15/as-ai-data-centers-hit-power-limits-peak-xv-backs-indian-startup-c2i-to",
+      "score": 1.0,
+      "tier": "high"
+    }
+  ],
+  "failed_sources": [
+    "luma"
+  ]
+}

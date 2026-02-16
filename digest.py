@@ -385,7 +385,7 @@ Items to score:
 {items_text}"""
 
     try:
-        response = llm_call(SYSTEM_CURATOR, user_prompt, max_tokens=1500)
+        response = llm_call(SYSTEM_CURATOR, user_prompt, max_tokens=2500)
 
         # Strip any markdown code fences if present
         response = re.sub(r"^```(?:json)?\s*", "", response.strip())
@@ -535,7 +535,17 @@ def summarise_all(curated: dict, raw: dict) -> tuple[dict, str]:
 # ---------------------------------------------------------------------------
 
 def md_to_html(text: str) -> str:
-    """Convert basic markdown (bullets, bold) to HTML."""
+    """Convert basic markdown (bullets, bold, links) to HTML."""
+
+    def _apply_inline(s: str) -> str:
+        # 1. Convert [text](url) markdown links FIRST — before bare URL linkify
+        s = re.sub(r"\[([^\]]+)\]\((https?://[^\)]+)\)", r'<a href="\2">\1</a>', s)
+        # 2. Bold
+        s = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", s)
+        # 3. Linkify bare URLs — the href="..." quotes protect already-converted links
+        s = re.sub(r'(?<!["\'])(https?://[^\s<>"\']+)', r'<a href="\1">\1</a>', s)
+        return s
+
     lines = text.split("\n")
     html_lines = []
     in_list = False
@@ -545,26 +555,14 @@ def md_to_html(text: str) -> str:
             if not in_list:
                 html_lines.append("<ul>")
                 in_list = True
-            content = stripped[2:]
-            content = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", content)
-            content = re.sub(
-                r"(?<![\"'])(https?://[^\s<>\"']+)",
-                r'<a href="\1">\1</a>',
-                content,
-            )
+            content = _apply_inline(stripped[2:])
             html_lines.append(f"  <li>{content}</li>")
         else:
             if in_list:
                 html_lines.append("</ul>")
                 in_list = False
             if stripped:
-                stripped = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", stripped)
-                stripped = re.sub(
-                    r"(?<![\"'])(https?://[^\s<>\"']+)",
-                    r'<a href="\1">\1</a>',
-                    stripped,
-                )
-                html_lines.append(f"<p>{stripped}</p>")
+                html_lines.append(f"<p>{_apply_inline(stripped)}</p>")
     if in_list:
         html_lines.append("</ul>")
     return "\n".join(html_lines)
@@ -780,10 +778,72 @@ def main(dry_run: bool = False):
     print("\nDone.")
 
 
+def test_curation():
+    """
+    Verify the curation LLM call works using a tiny synthetic dataset.
+    Sends ONE LLM call with 6 items (3 high-relevance, 3 low-relevance) and prints scores.
+    Use this to confirm scoring is working without running the full pipeline.
+    """
+    print("Testing curation scoring with synthetic items...")
+    profile = load_profile()
+
+    # Synthetic items: mix of clearly relevant and clearly irrelevant
+    fake_raw = {
+        "simon": (
+            "- Claude Code adds multi-agent orchestration support: https://simonwillison.net/2026/agent-arch/\n"
+            "- Notes on building LLM-powered developer tools: https://simonwillison.net/2026/llm-tools/\n"
+        ),
+        "techcrunch": (
+            "- AI agent startup raises $200M to automate enterprise workflows: https://techcrunch.com/ai-agent-series-c/\n"
+            "- Celebrity chef opens new restaurant in Miami: https://techcrunch.com/miami-restaurant/\n"
+        ),
+        "funcheap": (
+            "- Free jazz concert in Dolores Park this Sunday: https://sf.funcheap.com/jazz/\n"
+            "- Celebrity gossip roundup — who wore it best?: https://sf.funcheap.com/celeb/\n"
+        ),
+    }
+
+    curated, curation_log = curate(fake_raw, profile)
+
+    if curation_log.get("fallback"):
+        print(f"\n[FAIL] Curation fell back to include-all mode.")
+        print(f"  Error: {curation_log.get('error')}")
+        print("\n  This means the LLM scoring call failed (likely rate limit or model error).")
+        print("  Try again in a few minutes.")
+        return
+
+    print("\n[PASS] Curation scoring succeeded!\n")
+    print("Scores by source:")
+    for source_key, items in curated.items():
+        print(f"\n  {source_key}:")
+        for item in items:
+            bar = "█" * int(item.get("score", 0) * 10)
+            print(f"    [{item['score']:.2f}] {bar:10s} [{item.get('tier','?'):6s}] {item.get('title','')[:70]}")
+            if item.get("rationale"):
+                print(f"           → {item['rationale']}")
+
+    print(f"\nFilter stats:")
+    for src, stats in curation_log.items():
+        if isinstance(stats, dict) and "passed_filter" in stats:
+            print(f"  {src}: {stats['passed_filter']}/{stats['total_scored']} items passed")
+
+    expected_high = ["Claude Code", "LLM", "AI agent", "$200M"]
+    expected_low = ["restaurant", "celebrity gossip", "jazz concert"]
+    print("\nSanity check:")
+    print("  High-relevance items should include: AI/LLM/agent stories")
+    print("  Low-relevance items should score below 0.6 (or be filtered out)")
+
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true",
-                        help="Run full pipeline but skip sending email. Prints HTML to stdout.")
+                        help="Run full pipeline but skip sending email. HTML saved to dry-run-DATE.html.")
+    parser.add_argument("--test-curation", action="store_true",
+                        help="Run only the curation scoring step with synthetic items to verify LLM scoring works.")
     args = parser.parse_args()
-    main(dry_run=args.dry_run)
+
+    if args.test_curation:
+        test_curation()
+    else:
+        main(dry_run=args.dry_run)
