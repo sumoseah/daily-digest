@@ -1,0 +1,27 @@
+user:
+  name: Sumo
+  role: "Solutions Architect"
+
+interests:
+  high_priority:
+    - AI agents and agentic systems
+    - LLM application architecture
+    - robotics and embodied AI
+    - developer tools and DX
+    - AI research papers and breakthroughs
+  medium_priority:
+    - venture capital and startup funding
+    - product management practices
+    - product launches and new tools
+  low_priority:
+    - general tech news
+    - San Francisco local events (tech meetups, AI events)
+    - cheap and free SF activities
+
+content_rules:
+  max_items_per_section: 5
+  min_relevance_threshold: 0.6
+  always_include_sources:
+    - "simon"
+    - "lenny"
+  deprioritize_if_stale_hours: 48
